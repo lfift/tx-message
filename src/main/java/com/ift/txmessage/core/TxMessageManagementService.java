@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -54,8 +55,13 @@ public class TxMessageManagementService {
         transactionalMessage.setMaxRetryTimes(DEFAULT_MAX_RETRY_TIMES);
         txMessageMapper.insert(transactionalMessage);
         TransactionalMessageContent transactionalMessageContent = new TransactionalMessageContent();
+        transactionalMessageContent.setId(UUID.randomUUID().toString().replace("-", ""));
         transactionalMessageContent.setContent(content);
         transactionalMessageContent.setMessageId(transactionalMessage.getId());
+        transactionalMessageContent.setCreateUser(transactionalMessage.getCreateUser());
+        transactionalMessageContent.setCreateTime(transactionalMessage.getCreateTime());
+        transactionalMessageContent.setUpdateUser(transactionalMessage.getUpdateUser());
+        transactionalMessageContent.setUpdateTime(transactionalMessage.getUpdateTime());
         txMessageContentMapper.insert(transactionalMessageContent);
     }
 

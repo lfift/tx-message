@@ -8,12 +8,15 @@ import com.ift.txmessage.support.binding.ExchangeType;
 import com.ift.txmessage.support.message.TxMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.jni.Local;
 import org.springframework.amqp.core.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -58,12 +61,18 @@ public class RabbitTransactionMessageServiceImpl implements ITransactionalMessag
             return true;
         });
         TransactionalMessage record = new TransactionalMessage();
+        record.setId(UUID.randomUUID().toString().replace("-", ""));
         record.setQueueName(queueName);
         record.setExchangeName(exchangeName);
         record.setExchangeType(exchangeType.getType());
         record.setRoutingKey(routingKey);
         record.setBusinessModule(txMessage.businessModule());
         record.setBusinessKey(txMessage.businessKey());
+        record.setDeleted("0");
+        record.setCreateTime(LocalDateTime.now());
+        record.setCreateUser("1");
+        record.setUpdateTime(LocalDateTime.now());
+        record.setUpdateUser("1");
         String content = txMessage.content();
         // 保存事务消息记录
         managementService.saveTransactionalMessageRecord(record, content);

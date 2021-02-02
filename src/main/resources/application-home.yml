@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.3.10:3306/tx-message?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&nullCatalogMeansCurrent=true
+    hikari:
+      username: root
+      password: root
+      minimum-idle: 10
+      maximum-pool-size: 25
+      idle-timeout: 300000
+      pool-name: ExpendHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 300000
+      connection-test-query: select 1
+  rabbitmq:
+    username: admin
+    password: admin
+    host: 192.168.3.10
+    virtual-host: /
+  redis:
+    timeout: 6000ms
+    database: 0
+    lettuce:
+      pool:
+        max-active: 1000  #连接池最大连接数（使用负值表示没有限制）
+        max-idle: 10 # 连接池中的最大空闲连接
+        min-idle: 5 # 连接池中的最小空闲连接
+        max-wait: -1 # 连接池最大阻塞等待时间（使用负值表示没有限制）
+    host: 192.168.3.10
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

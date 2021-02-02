@@ -21,117 +21,117 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("TX_MESSAGE")
+@TableName("tx_message")
 public class TransactionalMessage implements Serializable {
 
     private static final long serialVersionUID = -2381304812547174133L;
     /**
      * 主键
      */
-    @TableId("ID")
+    @TableId("id")
     private String id;
 
     /**
      * 队列名
      */
-    @TableField("QUEUE_NAME")
+    @TableField("queue_name")
     private String queueName;
 
     /**
      * 交换器名
      */
-    @TableField("EXCHANGE_NAME")
+    @TableField("exchange_name")
     private String exchangeName;
 
     /**
      * 交换器类型
      */
-    @TableField("EXCHANGE_TYPE")
+    @TableField("exchange_type")
     private String exchangeType;
 
     /**
      * 路由健
      */
-    @TableField("ROUTING_KEY")
+    @TableField("routing_key")
     private String routingKey;
 
     /**
      * 业务模块
      */
-    @TableField("BUSINESS_MODULE")
+    @TableField("business_module")
     private String businessModule;
 
     /**
      * 业务键
      */
-    @TableField("BUSINESS_KEY")
+    @TableField("business_key")
     private String businessKey;
 
     /**
      * 当前重试次数
      */
-    @TableField("CURRENT_RETRY_TIMES")
+    @TableField("current_retry_times")
     private int currentRetryTimes;
 
     /**
      * 最大重试次数
      */
-    @TableField("MAX_RETRY_TIMES")
+    @TableField("max_retry_times")
     private int maxRetryTimes;
 
     /**
      * 下一次调度时间
      */
-    @TableField(value = "NEXT_SCHEDULE_TIME", jdbcType = JdbcType.DATE, typeHandler = LocalDateTimeTypeHandler.class)
+    @TableField(value = "next_schedule_time")
     private LocalDateTime nextScheduleTime;
 
     /**
      * 退避初始化值
      */
-    @TableField("INIT_BACKOFF")
+    @TableField("init_backoff")
     private int initBackoff;
 
     /**
      * 退避初始化值，单位为秒
      */
-    @TableField("BACKOFF_FACTOR")
+    @TableField("backoff_factor")
     private int backoffFactor;
 
     /**
      * 消息状态，0：待推送，1：推送成功，2：推送失败
      */
-    @TableField("MESSAGE_STATUS")
+    @TableField("message_status")
     private int messageStatus;
 
     /**
      * 是否删除，1：是，0：否
      */
-    @TableField(value = "DELETED", fill = FieldFill.INSERT)
+    @TableField(value = "deleted")
     @TableLogic
     private String deleted;
 
     /**
      * 新增人
      */
-    @TableField("CREATE_USER")
+    @TableField("create_user")
     private String createUser;
 
     /**
      * 新增时间
      */
-    @TableField(value = "CREATE_TIME", fill = FieldFill.INSERT, typeHandler = LocalDateTimeTypeHandler.class)
+    @TableField(value = "create_time")
     private LocalDateTime createTime;
 
     /**
      * 修改人
      */
-    @TableField("UPDATE_USER")
+    @TableField("update_user")
     private String updateUser;
 
     /**
      * 更新时间
      */
-    @TableField(value = "UPDATE_TIME", fill = FieldFill.INSERT, typeHandler = LocalDateTimeTypeHandler.class)
+    @TableField(value = "update_time")
     private LocalDateTime updateTime;
 
 

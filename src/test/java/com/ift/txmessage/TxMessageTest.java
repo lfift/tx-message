@@ -1,16 +1,20 @@
 package com.ift.txmessage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ift.txmessage.service.ITransactionalMessageService;
 import com.ift.txmessage.support.binding.DefaultDestination;
 import com.ift.txmessage.support.binding.ExchangeType;
 import com.ift.txmessage.support.message.DefaultTxMessage;
+import com.sun.xml.internal.ws.policy.EffectiveAlternativeSelector;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -25,12 +29,9 @@ import java.util.UUID;
  * @date 2021/2/2 17:09
  */
 @Slf4j
-@Profile("dev")
+@ActiveProfiles("home")
 @SpringBootTest
-public class MockBusinessService {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+public class TxMessageTest {
     @Autowired
     private ITransactionalMessageService transactionalMessageService;
     @Autowired
@@ -44,11 +45,10 @@ public class MockBusinessService {
         Map<String, Object> message = new HashMap<>();
         message.put("orderId", orderId);
         message.put("amount", amount);
-        jdbcTemplate.update("INSERT INTO t_order(order_id,amount) VALUES (?,?)", p -> {
-            p.setString(1, orderId);
-            p.setBigDecimal(2, amount);
-        });
         String content = objectMapper.writeValueAsString(message);
+        TypeReference<Map<String, Object>> typeReference = new TypeReference<Map<String, Object>>() {};
+        Map<String, Object> map = objectMapper.readValue("{\"code\":200,\"message\":\"123\"}", typeReference);
+        System.out.println(map);
         transactionalMessageService.sendTransactionalMessage(
                 DefaultDestination.builder()
                         .exchangeName("tm.test.exchange")

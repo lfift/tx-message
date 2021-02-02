@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.generator.AutoGenerator;
 import com.baomidou.mybatisplus.generator.InjectionConfig;
 import com.baomidou.mybatisplus.generator.config.*;
 import com.baomidou.mybatisplus.generator.config.converts.OracleTypeConvert;
+import com.baomidou.mybatisplus.generator.config.po.TableField;
 import com.baomidou.mybatisplus.generator.config.po.TableFill;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
@@ -100,6 +101,16 @@ public class MyBatisPlusGenerator {
             @Override
             public void initMap() {
                 // to do nothing
+            }
+
+            @Override
+            public void initTableMap(TableInfo tableInfo) {
+                super.initTableMap(tableInfo);
+                tableInfo.setName(tableInfo.getName().toLowerCase());
+                for (TableField field : tableInfo.getFields()) {
+                    field.setName(field.getName().toLowerCase());
+                    field.setPropertyName(field.getPropertyName().toLowerCase());
+                }
             }
         };
         List<FileOutConfig> focList = new ArrayList<>();

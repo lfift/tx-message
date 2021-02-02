@@ -28,7 +28,7 @@ public class ScheduleJobTaskConfig {
     private final TxMessageManagementService txMessageManagementService;
     private final RedissonClient redissonClient;
 
-    @Scheduled(fixedDelay = 6000)
+//    @Scheduled(fixedDelay = 6000)
     public void scheduleTxMessage() throws InterruptedException {
         RLock lock = redissonClient.getLock(REDIS_LOCK_KEY);
         //等待时间5秒,预期300秒执行完毕,这两个值需要按照实际场景定制

@@ -4,24 +4,24 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.ift.txmessage.entity.TransactionalMessage">
-        <id column="ID" property="id" />
-        <result column="QUEUE_NAME" property="queueName" />
-        <result column="EXCHANGE_NAME" property="exchangeName" />
-        <result column="EXCHANGE_TYPE" property="exchangeType" />
-        <result column="ROUTING_KEY" property="routingKey" />
-        <result column="BUSINESS_MODULE" property="businessModule" />
-        <result column="BUSINESS_KEY" property="businessKey" />
-        <result column="CURRENT_RETRY_TIMES" property="currentRetryTimes" />
-        <result column="MAX_RETRY_TIMES" property="maxRetryTimes" />
-        <result column="NEXT_SCHEDULE_TIME" property="nextScheduleTime" />
-        <result column="INIT_BACKOFF" property="initBackoff" />
-        <result column="BACKOFF_FACTOR" property="backoffFactor" />
-        <result column="MESSAGE_STATUS" property="messageStatus" />
-        <result column="DELETED" property="deleted" />
-        <result column="CREATE_USER" property="createUser" />
-        <result column="CREATE_TIME" property="createTime" />
-        <result column="UPDATE_USER" property="updateUser" />
-        <result column="UPDATE_TIME" property="updateTime" />
+        <id column="id" property="id" />
+        <result column="queue_name" property="queueName" />
+        <result column="exchange_name" property="exchangeName" />
+        <result column="exchange_type" property="exchangeType" />
+        <result column="routing_key" property="routingKey" />
+        <result column="business_module" property="businessModule" />
+        <result column="business_key" property="businessKey" />
+        <result column="current_retry_times" property="currentRetryTimes" />
+        <result column="max_retry_times" property="maxRetryTimes" />
+        <result column="next_schedule_time" property="nextScheduleTime" />
+        <result column="init_backoff" property="initBackoff" />
+        <result column="backoff_factor" property="backoffFactor" />
+        <result column="message_status" property="messageStatus" />
+        <result column="deleted" property="deleted" />
+        <result column="create_user" property="createUser" />
+        <result column="create_time" property="createTime" />
+        <result column="update_user" property="updateUser" />
+        <result column="update_time" property="updateTime" />
     </resultMap>
 
 </mapper>

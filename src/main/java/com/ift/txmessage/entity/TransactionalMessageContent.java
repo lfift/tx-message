@@ -22,50 +22,50 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("TX_MESSAGE_CONTENT")
+@TableName("tx_message_content")
 public class TransactionalMessageContent implements Serializable {
 
     private static final long serialVersionUID = -9191833216631490246L;
     /**
      * 主键
      */
-    @TableId("ID")
+    @TableId("id")
     private String id;
 
     /**
      * 事务消息记录ID
      */
-    @TableField("MESSAGE_ID")
+    @TableField("message_id")
     private String messageId;
 
     /**
      * 消息内容
      */
-    @TableField("CONTENT")
+    @TableField("content")
     private String content;
 
     /**
      * 新增人
      */
-    @TableField("CREATE_USER")
+    @TableField("create_user")
     private String createUser;
 
     /**
      * 新增时间
      */
-    @TableField(value = "CREATE_TIME", fill = FieldFill.INSERT)
+    @TableField(value = "create_time")
     private LocalDateTime createTime;
 
     /**
      * 修改人
      */
-    @TableField("UPDATE_USER")
+    @TableField("update_user")
     private String updateUser;
 
     /**
      * 修改时间
      */
-    @TableField(value = "UPDATE_TIME", fill = FieldFill.INSERT)
+    @TableField(value = "update_time")
     private LocalDateTime updateTime;
 
 
