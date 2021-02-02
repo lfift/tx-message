@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class AuthMyBatisPlusGenerator {
+public class MyBatisPlusGenerator {
 
     private static final String datasourcesUrl = "jdbc:oracle:thin:@192.168.0.202:1521/kfdb.zt";
     private static final String datasourcesUsername = "gsywjz";
