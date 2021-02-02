@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ift.txmessage.mapper.TxMessageMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.ift.txmessage.entity.TransactionalMessage">
+        <id column="ID" property="id" />
+        <result column="QUEUE_NAME" property="queueName" />
+        <result column="EXCHANGE_NAME" property="exchangeName" />
+        <result column="EXCHANGE_TYPE" property="exchangeType" />
+        <result column="ROUTING_KEY" property="routingKey" />
+        <result column="BUSINESS_MODULE" property="businessModule" />
+        <result column="BUSINESS_KEY" property="businessKey" />
+        <result column="CURRENT_RETRY_TIMES" property="currentRetryTimes" />
+        <result column="MAX_RETRY_TIMES" property="maxRetryTimes" />
+        <result column="NEXT_SCHEDULE_TIME" property="nextScheduleTime" />
+        <result column="INIT_BACKOFF" property="initBackoff" />
+        <result column="BACKOFF_FACTOR" property="backoffFactor" />
+        <result column="MESSAGE_STATUS" property="messageStatus" />
+        <result column="DELETED" property="deleted" />
+        <result column="CREATE_USER" property="createUser" />
+        <result column="CREATE_TIME" property="createTime" />
+        <result column="UPDATE_USER" property="updateUser" />
+        <result column="UPDATE_TIME" property="updateTime" />
+    </resultMap>
+
+</mapper>
