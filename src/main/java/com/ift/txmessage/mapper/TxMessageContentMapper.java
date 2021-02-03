@@ -1,7 +1,8 @@
 package com.ift.txmessage.mapper;
 
-import com.ift.txmessage.entity.TransactionalMessageContent;
+import com.ift.txmessage.entity.TxMessageContent;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author liufei
  * @since 2021-02-01
  */
-public interface TxMessageContentMapper extends BaseMapper<TransactionalMessageContent> {
+@Mapper
+public interface TxMessageContentMapper extends BaseMapper<TxMessageContent> {
 
 }

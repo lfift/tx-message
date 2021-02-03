@@ -11,19 +11,18 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum TxMessageStatus {
-    /**
-     * 成功
-     */
-    SUCCESS(1),
+public enum MessageStatus {
 
     /**
-     * 待处理
+     * 待推送
      */
     PENDING(0),
-
     /**
-     * 处理失败
+     * 推送成功
+     */
+    SUCCESS(1),
+    /**
+     * 推送失败
      */
     FAIL(2),
 

@@ -1,6 +1,5 @@
 package com.ift.txmessage;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -9,7 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * @author liufei
  */
-@MapperScan("com.ift.txmessage.mapper")
 @SpringBootApplication
 public class TxMessageApplication {
 

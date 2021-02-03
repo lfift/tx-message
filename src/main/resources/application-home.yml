@@ -17,6 +17,8 @@ spring:
     password: admin
     host: 192.168.3.10
     virtual-host: /
+    publisher-confirm-type: correlated
+    publisher-returns: true
   redis:
     timeout: 6000ms
     database: 0

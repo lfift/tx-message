@@ -17,6 +17,11 @@ spring:
     password: admin
     host: 192.168.0.203
     virtual-host: /
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      #若消息没有被路由到queue则进入ReturnCallback，否则丢弃消息
+      mandatory: true
   redis:
     timeout: 6000ms
     database: 0
@@ -35,6 +40,6 @@ spring:
         - 192.168.0.202:6380
         - 192.168.0.203:6379
         - 192.168.0.203:6380
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

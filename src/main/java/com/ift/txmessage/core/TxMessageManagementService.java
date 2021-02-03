@@ -3,13 +3,16 @@ package com.ift.txmessage.core;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ift.txmessage.entity.TransactionalMessage;
-import com.ift.txmessage.entity.TransactionalMessageContent;
+import com.ift.txmessage.entity.TxMessage;
+import com.ift.txmessage.entity.TxMessageContent;
 import com.ift.txmessage.mapper.TxMessageContentMapper;
 import com.ift.txmessage.mapper.TxMessageMapper;
-import com.ift.txmessage.support.message.TxMessageStatus;
+import com.ift.txmessage.support.message.MessageStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -32,97 +35,137 @@ public class TxMessageManagementService {
     private final TxMessageContentMapper txMessageContentMapper;
     private final RabbitTemplate rabbitTemplate;
 
-    private static final LocalDateTime END =
+    /**
+     * 最大重推时间
+     */
+    private static final LocalDateTime MAX_NEXT_SCHEDULE_TIME =
             LocalDateTime.of(2999, 1, 1, 0, 0, 0);
+    /**
+     * 退避初始化值
+     */
     private static final int DEFAULT_INIT_BACKOFF = 10;
+    /**
+     * 退避因子
+     */
     private static final int DEFAULT_BACKOFF_FACTOR = 2;
+    /**
+     * 最大重试次数
+     */
     private static final int DEFAULT_MAX_RETRY_TIMES = 5;
+    /**
+     * 每次重推数量
+     */
     private static final int SIZE = 100;
 
     /**
      * 保存消息记录
      *
-     * @param transactionalMessage 消息信息
+     * @param txMessage 消息信息
      * @param content   消息内容
      */
-    public void saveTransactionalMessageRecord(TransactionalMessage transactionalMessage, String content) {
-        transactionalMessage.setMessageStatus(TxMessageStatus.PENDING.getStatus());
-        transactionalMessage.setNextScheduleTime(calculateNextScheduleTime(LocalDateTime.now(), DEFAULT_INIT_BACKOFF,
+    public void saveTransactionalMessageRecord(TxMessage txMessage, String content) {
+        txMessage.setMessageStatus(MessageStatus.PENDING.getStatus());
+        txMessage.setNextScheduleTime(calculateNextScheduleTime(LocalDateTime.now(), DEFAULT_INIT_BACKOFF,
                 DEFAULT_BACKOFF_FACTOR, 0));
-        transactionalMessage.setCurrentRetryTimes(0);
-        transactionalMessage.setInitBackoff(DEFAULT_INIT_BACKOFF);
-        transactionalMessage.setBackoffFactor(DEFAULT_BACKOFF_FACTOR);
-        transactionalMessage.setMaxRetryTimes(DEFAULT_MAX_RETRY_TIMES);
-        txMessageMapper.insert(transactionalMessage);
-        TransactionalMessageContent transactionalMessageContent = new TransactionalMessageContent();
-        transactionalMessageContent.setId(UUID.randomUUID().toString().replace("-", ""));
-        transactionalMessageContent.setContent(content);
-        transactionalMessageContent.setMessageId(transactionalMessage.getId());
-        transactionalMessageContent.setCreateUser(transactionalMessage.getCreateUser());
-        transactionalMessageContent.setCreateTime(transactionalMessage.getCreateTime());
-        transactionalMessageContent.setUpdateUser(transactionalMessage.getUpdateUser());
-        transactionalMessageContent.setUpdateTime(transactionalMessage.getUpdateTime());
-        txMessageContentMapper.insert(transactionalMessageContent);
+        txMessage.setCurrentRetryTimes(0);
+        txMessage.setInitBackoff(DEFAULT_INIT_BACKOFF);
+        txMessage.setBackoffFactor(DEFAULT_BACKOFF_FACTOR);
+        txMessage.setMaxRetryTimes(DEFAULT_MAX_RETRY_TIMES);
+        txMessageMapper.insert(txMessage);
+        TxMessageContent txMessageContent = new TxMessageContent();
+        txMessageContent.setId(UUID.randomUUID().toString().replace("-", ""));
+        txMessageContent.setContent(content);
+        txMessageContent.setMessageId(txMessage.getMessageId());
+        txMessageContent.setCreateUser(txMessage.getCreateUser());
+        txMessageContent.setCreateTime(txMessage.getCreateTime());
+        txMessageContent.setUpdateUser(txMessage.getUpdateUser());
+        txMessageContent.setUpdateTime(txMessage.getUpdateTime());
+        txMessageContentMapper.insert(txMessageContent);
     }
 
+    private final MessagePostProcessor messagePostProcessor;
     /**
      * 发送消息
      *
-     * @param transactionalMessage 消息信息
+     * @param txMessage 消息信息
      * @param content   消息内容
      */
-    public void sendMessageSync(TransactionalMessage transactionalMessage, String content) {
+    public void sendMessageSync(TxMessage txMessage, String content) {
         try {
-            rabbitTemplate.convertAndSend(transactionalMessage.getExchangeName(), transactionalMessage.getRoutingKey(), content);
-            if (log.isDebugEnabled()) {
-                log.debug("发送消息成功,目标队列:{},消息内容:{}", transactionalMessage.getQueueName(), content);
-            }
-            // 标记成功
-            markSuccess(transactionalMessage);
+            rabbitTemplate.convertAndSend(txMessage.getExchangeName(),
+                    txMessage.getRoutingKey(), content, messagePostProcessor,
+                    new CorrelationData(txMessage.getMessageId()));
         } catch (Exception e) {
             // 标记失败
-            markFail(transactionalMessage, e);
+            markFail(txMessage);
         }
     }
 
     /**
      * 标记成功
      *
-     * @param transactionalMessage 消息信息
+     * @param txMessage 消息信息
      */
-    private void markSuccess(TransactionalMessage transactionalMessage) {
+    private void markSuccess(TxMessage txMessage) {
         //设置下次重推时间为最大值
-        transactionalMessage.setNextScheduleTime(END);
-        if (transactionalMessage.getCurrentRetryTimes() < transactionalMessage.getMaxRetryTimes()) {
-            transactionalMessage.setCurrentRetryTimes(transactionalMessage.getCurrentRetryTimes() + 1);
+        txMessage.setNextScheduleTime(MAX_NEXT_SCHEDULE_TIME);
+        if (txMessage.getCurrentRetryTimes() < txMessage.getMaxRetryTimes()) {
+            txMessage.setCurrentRetryTimes(txMessage.getCurrentRetryTimes() + 1);
         }
-        transactionalMessage.setMessageStatus(TxMessageStatus.SUCCESS.getStatus());
-        transactionalMessage.setUpdateTime(LocalDateTime.now());
-        txMessageMapper.updateById(transactionalMessage);
+        txMessage.setMessageStatus(MessageStatus.SUCCESS.getStatus());
+        txMessage.setUpdateTime(LocalDateTime.now());
+        txMessageMapper.updateById(txMessage);
+    }
+
+    /**
+     * 标记成功
+     *
+     * @param messageId 消息ID
+     */
+    public void markSuccess(String messageId) {
+        if (StringUtils.isEmpty(messageId)) {
+            return;
+        }
+        TxMessage txMessage = txMessageMapper.selectById(messageId);
+        if (txMessage == null) {
+            return;
+        }
+        this.markSuccess(txMessage);
     }
 
     /**
      * 标记失败
      *
-     * @param transactionalMessage 消息信息
-     * @param e 异常对象
+     * @param txMessage 消息信息
      */
-    private void markFail(TransactionalMessage transactionalMessage, Exception e) {
-        log.error("发送消息失败,目标队列:{}", transactionalMessage.getQueueName(), e);
-        if (transactionalMessage.getCurrentRetryTimes() < transactionalMessage.getMaxRetryTimes()) {
-            transactionalMessage.setCurrentRetryTimes(transactionalMessage.getCurrentRetryTimes() + 1);
+    private void markFail(TxMessage txMessage) {
+        if (txMessage.getCurrentRetryTimes() < txMessage.getMaxRetryTimes()) {
+            txMessage.setCurrentRetryTimes(txMessage.getCurrentRetryTimes() + 1);
         }
         // 计算下一次的执行时间
         LocalDateTime nextScheduleTime = calculateNextScheduleTime(
-                transactionalMessage.getNextScheduleTime(),
-                transactionalMessage.getInitBackoff(),
-                transactionalMessage.getBackoffFactor(),
-                transactionalMessage.getCurrentRetryTimes()
-        );
-        transactionalMessage.setNextScheduleTime(nextScheduleTime);
-        transactionalMessage.setMessageStatus(TxMessageStatus.FAIL.getStatus());
-        transactionalMessage.setUpdateTime(LocalDateTime.now());
-        txMessageMapper.updateById(transactionalMessage);
+                txMessage.getNextScheduleTime(), txMessage.getInitBackoff(),
+                txMessage.getBackoffFactor(), txMessage.getCurrentRetryTimes());
+        txMessage.setNextScheduleTime(nextScheduleTime);
+        txMessage.setMessageStatus(MessageStatus.FAIL.getStatus());
+        txMessage.setUpdateTime(LocalDateTime.now());
+        txMessageMapper.updateById(txMessage);
+    }
+
+    /**
+     * 标记失败
+     *
+     * @param messageId 消息ID
+     */
+    public void markFail(String messageId) {
+        if (StringUtils.isEmpty(messageId)) {
+            return;
+        }
+        TxMessage txMessage = txMessageMapper.selectById(messageId);
+        if (txMessage == null) {
+            return;
+        }
+        this.markFail(txMessage);
     }
 
     /**
@@ -132,12 +175,10 @@ public class TxMessageManagementService {
      * @param initBackoff   退避基准值
      * @param backoffFactor 退避指数
      * @param round         轮数
-     * @return LocalDateTime
+     * @return 下一次重推时间
      */
-    private LocalDateTime calculateNextScheduleTime(LocalDateTime base,
-                                                    long initBackoff,
-                                                    long backoffFactor,
-                                                    long round) {
+    private LocalDateTime calculateNextScheduleTime(LocalDateTime base, long initBackoff,
+                                                    long backoffFactor, long round) {
         double delta = initBackoff * Math.pow(backoffFactor, round);
         return base.plusSeconds((long) delta);
     }
@@ -149,23 +190,25 @@ public class TxMessageManagementService {
         // 这里预防把刚保存的消息也推送了
         LocalDateTime max = LocalDateTime.now().plusSeconds(-DEFAULT_INIT_BACKOFF);
         LocalDateTime min = max.plusHours(-1);
-        LambdaQueryWrapper<TransactionalMessage> messageQueryWrapper = Wrappers.lambdaQuery();
-        messageQueryWrapper.between(TransactionalMessage::getNextScheduleTime, min, max);
-        Page<TransactionalMessage> page = new Page<>();
+        LambdaQueryWrapper<TxMessage> messageQueryWrapper =
+                Wrappers.<TxMessage>lambdaQuery()
+                        .between(TxMessage::getNextScheduleTime, min, max)
+                        .orderByAsc(TxMessage::getNextScheduleTime);
+        Page<TxMessage> page = new Page<>();
         page.setSize(SIZE);
         page.setPages(1);
-        Map<String, TransactionalMessage> messages =
+        Map<String, TxMessage> messages =
                 txMessageMapper.selectPage(page, messageQueryWrapper).getRecords()
-                        .stream().collect(Collectors.toMap(TransactionalMessage::getId, x -> x));
+                        .stream().collect(Collectors.toMap(TxMessage::getMessageId, x -> x));
         if (messages.isEmpty()) {
             return;
         }
-        LambdaQueryWrapper<TransactionalMessageContent> messageContentQueryWrapper =
-                Wrappers.lambdaQuery();
-        messageContentQueryWrapper.in(TransactionalMessageContent::getMessageId, messages.keySet());
+        LambdaQueryWrapper<TxMessageContent> messageContentQueryWrapper =
+                Wrappers.<TxMessageContent>lambdaQuery()
+                        .in(TxMessageContent::getMessageId, messages.keySet());
         txMessageContentMapper.selectList(messageContentQueryWrapper).forEach(item -> {
-            TransactionalMessage transactionalMessage = messages.get(item.getMessageId());
-            sendMessageSync(transactionalMessage, item.getContent());
+            TxMessage txMessage = messages.get(item.getMessageId());
+            sendMessageSync(txMessage, item.getContent());
         });
     }
 }

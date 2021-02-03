@@ -6,7 +6,7 @@ package com.ift.txmessage.support.message;
  * @author liufei
  * @date 2021/2/2 10:20
  */
-public interface TxMessage {
+public interface Message {
 
     /**
      * 业务模块
@@ -28,4 +28,11 @@ public interface TxMessage {
      * @return 消息内容
      */
     String content();
+
+    /**
+     * 消息ID
+     *
+     * @return 消息ID
+     */
+    String messageId();
 }

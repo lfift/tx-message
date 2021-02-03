@@ -9,11 +9,12 @@ import lombok.Builder;
  * @date 2021/2/2 10:22
  */
 @Builder
-public class DefaultTxMessage implements TxMessage {
+public class DefaultMessage implements Message {
 
-    private String businessModule;
-    private String businessKey;
-    private String content;
+    private final String businessModule;
+    private final String businessKey;
+    private final String content;
+    private final String messageId;
     /**
      * 业务模块
      *
@@ -42,5 +43,15 @@ public class DefaultTxMessage implements TxMessage {
     @Override
     public String content() {
         return this.content;
+    }
+
+    /**
+     * 消息ID
+     *
+     * @return 消息ID
+     */
+    @Override
+    public String messageId() {
+        return this.messageId;
     }
 }

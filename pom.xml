@@ -15,17 +15,22 @@
     <description>The Message Queue for Transaction</description>
     <properties>
         <java.version>1.8</java.version>
-        <oracle.version>11.2.0.1.0</oracle.version>
+<!--        <oracle.version>11.2.0.1.0</oracle.version>-->
+        <oracle.version>12.2.0.1</oracle.version>
         <mybatis-plus.version>3.4.1</mybatis-plus.version>
         <redisson.version>3.14.1</redisson.version>
         <velocity.version>2.0</velocity.version>
     </properties>
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.oracle</groupId>-->
-<!--            <artifactId>ojdbc6</artifactId>-->
-<!--            <version>${oracle.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>${oracle.version}</version>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

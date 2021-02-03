@@ -1,6 +1,5 @@
 package com.ift.txmessage.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -23,7 +22,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("tx_message_content")
-public class TransactionalMessageContent implements Serializable {
+public class TxMessageContent implements Serializable {
 
     private static final long serialVersionUID = -9191833216631490246L;
     /**
