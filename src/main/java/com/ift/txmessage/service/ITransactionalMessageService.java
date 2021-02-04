@@ -18,4 +18,12 @@ public interface ITransactionalMessageService {
      * @param message 消息信息
      */
     void sendTransactionalMessage(Destination destination, Message message);
+
+    /**
+     * 幂等性校验
+     *
+     * @param correlationId 消息唯一标识
+     * @return true：通过，false：未通过
+     */
+    boolean checkIdempotent(String correlationId);
 }

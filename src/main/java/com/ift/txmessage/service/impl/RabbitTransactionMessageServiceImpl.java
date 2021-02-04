@@ -1,11 +1,14 @@
 package com.ift.txmessage.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ift.txmessage.core.TxMessageManagementService;
 import com.ift.txmessage.entity.TxMessage;
+import com.ift.txmessage.mapper.TxMessageMapper;
 import com.ift.txmessage.service.ITransactionalMessageService;
 import com.ift.txmessage.support.binding.Destination;
 import com.ift.txmessage.support.binding.ExchangeType;
 import com.ift.txmessage.support.message.Message;
+import com.ift.txmessage.support.message.MessageStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
@@ -15,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,6 +35,7 @@ public class RabbitTransactionMessageServiceImpl implements ITransactionalMessag
 
     private final AmqpAdmin amqpAdmin;
     private final TxMessageManagementService managementService;
+    private final TxMessageMapper txMessageMapper;
 
     private static final ConcurrentMap<String, Boolean> QUEUE_ALREADY_DECLARE = new ConcurrentHashMap<>();
 
@@ -81,5 +86,20 @@ public class RabbitTransactionMessageServiceImpl implements ITransactionalMessag
                 managementService.sendMessageSync(record, content);
             }
         });
+    }
+
+    /**
+     * 幂等性校验
+     *
+     * @param correlationId 消息唯一标识
+     * @return true：通过，false：未通过
+     */
+    @Override
+    public boolean checkIdempotent(String correlationId) {
+        List<TxMessage> txMessages =
+                txMessageMapper.selectList(Wrappers.<TxMessage>lambdaQuery()
+                        .eq(TxMessage::getMessageId, correlationId)
+                        .eq(TxMessage::getMessageStatus, MessageStatus.SUCCESS));
+        return txMessages.isEmpty();
     }
 }
