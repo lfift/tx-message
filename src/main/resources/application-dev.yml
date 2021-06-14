@@ -19,6 +19,9 @@ spring:
     virtual-host: /
     publisher-confirm-type: correlated
     publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
     template:
       #若消息没有被路由到queue则进入ReturnCallback，否则丢弃消息
       mandatory: true

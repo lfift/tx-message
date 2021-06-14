@@ -11,7 +11,7 @@ import com.ift.txmessage.support.message.MessageStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -34,6 +34,26 @@ public class TxMessageManagementService {
     private final TxMessageMapper txMessageMapper;
     private final TxMessageContentMapper txMessageContentMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate.ConfirmCallback confirmCallback = (correlationData, ack, cause) -> {
+        if (correlationData == null) {
+            return;
+        }
+        String correlationDataId = correlationData.getId();
+        if (ack) {
+            //投递成功，修改状态
+            markSuccess(correlationDataId);
+        } else {
+            //NACK投递失败进行重发
+            markFail(correlationDataId);
+        }
+    };
+
+    private final RabbitTemplate.ReturnsCallback returnsCallback = returned -> {
+        //message, replyCode, replyText, exchange, routingKey
+        log.warn("路由失败 message: [{}], replyCode: [{}], replyText: [{}], exchange: [{}], " +
+                        "routingKey: [{}]", returned.getMessage(), returned.getReplyCode(),
+                returned.getReplyText(), returned.getExchange(), returned.getRoutingKey());
+    };
 
     /**
      * 最大重推时间
@@ -83,7 +103,6 @@ public class TxMessageManagementService {
         txMessageContentMapper.insert(txMessageContent);
     }
 
-    private final MessagePostProcessor messagePostProcessor;
     /**
      * 发送消息
      *
@@ -92,9 +111,13 @@ public class TxMessageManagementService {
      */
     public void sendMessageSync(TxMessage txMessage, String content) {
         try {
+            rabbitTemplate.setConfirmCallback(confirmCallback);
+            rabbitTemplate.setReturnsCallback(returnsCallback);
+            MessageProperties properties = MessagePropertiesBuilder.newInstance().build();
+            properties.setCorrelationId(txMessage.getMessageId());
+            Message message = MessageBuilder.withBody(content.getBytes()).andProperties(properties).build();
             rabbitTemplate.convertAndSend(txMessage.getExchangeName(),
-                    txMessage.getRoutingKey(), content, messagePostProcessor,
-                    new CorrelationData(txMessage.getMessageId()));
+                    txMessage.getRoutingKey(), message, new CorrelationData(txMessage.getMessageId()));
         } catch (Exception e) {
             // 标记失败
             markFail(txMessage);
